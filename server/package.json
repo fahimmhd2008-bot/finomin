@@ -1,6 +1,7 @@
 {
   "name": "campus-sustainability-server",
   "version": "1.0.0",
+  "type": "module",
   "description": "Production Express Backend & AI Intelligence Layer for Campus Sustainability Monitoring System",
   "main": "dist/index.js",
   "scripts": {

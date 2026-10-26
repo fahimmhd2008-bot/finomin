@@ -21,9 +21,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
+// Build the list of allowed CORS origins.
+// VERCEL_URL is injected automatically by Vercel at runtime (no https:// prefix).
+const allowedOrigins: string[] = [
+  CLIENT_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+if (process.env.VERCEL_URL) {
+  allowedOrigins.push(`https://${process.env.VERCEL_URL.replace(/\/$/, '')}`);
+}
+
 // Middleware
 app.use(cors({
-  origin: [CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

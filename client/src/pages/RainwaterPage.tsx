@@ -53,7 +53,7 @@ export const RainwaterPage: React.FC = () => {
           title="Storage Fill Ratio"
           value={`${metrics.avgStoragePct}%`}
           icon={CloudRain}
-          colorVariant="teal"
+          colorVariant="cyan"
           subtitle={`${metrics.tanksCount} major campus cisterns`}
           statusBadge={metrics.avgStoragePct > 80 ? 'Near Capacity' : 'Headroom OK'}
         />

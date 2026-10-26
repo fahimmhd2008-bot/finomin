@@ -8,7 +8,7 @@ import { store } from '../services/store.js';
 const router = Router();
 
 // GET student balance & stats
-router.get('/balance/:studentId', authenticateToken, async (req: Request, res: Response) => {
+router.get('/balance/:studentId', authenticateToken, async (req: Request<{ studentId: string }>, res: Response) => {
   const { studentId } = req.params;
   const balance = store.studentBalances.get(studentId) || {
     student_id: studentId,
