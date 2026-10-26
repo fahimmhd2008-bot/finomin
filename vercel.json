@@ -7,9 +7,7 @@
     },
     "server": {
       "root": "server",
-      "framework": "express",
-      "buildCommand": "npm run build",
-      "entrypoint": "dist/index.js"
+      "framework": "express"
     }
   },
   "rewrites": [
