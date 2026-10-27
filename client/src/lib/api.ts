@@ -80,6 +80,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // Auth & Roles
+  login: (email: string, password?: string, role?: string) =>
+    request<{ message: string; token: string; user: any }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, role }),
+    }),
   demoLogin: (role: 'admin' | 'staff' | 'student') =>
     request<{ message: string; token: string; user: any }>('/auth/demo-login', {
       method: 'POST',

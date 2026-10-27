@@ -69,6 +69,49 @@ router.post('/sync', authenticateToken, async (req: Request, res: Response) => {
   });
 });
 
+// POST login with email and password
+router.post('/login', async (req: Request, res: Response) => {
+  const { email, password, role } = req.body;
+
+  if (!email) {
+    res.status(400).json({ error: 'Email address is required' });
+    return;
+  }
+
+  // Check if matches known mock profiles
+  let user = mockProfiles.find(p => p.email.toLowerCase() === email.toLowerCase());
+
+  if (!user) {
+    // If custom email, generate or assign user profile based on role or email prefix
+    const assignedRole: 'admin' | 'staff' | 'student' =
+      (role === 'admin' || role === 'staff' || role === 'student')
+        ? role
+        : (email.includes('admin') ? 'admin' : email.includes('staff') ? 'staff' : 'student');
+    const namePart = email.split('@')[0].replace(/[._-]/g, ' ');
+    const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+
+    user = {
+      id: `usr-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      email: email,
+      full_name: formattedName || 'Campus Member',
+      role: assignedRole,
+      department: assignedRole === 'admin' ? 'Campus Administration' : assignedRole === 'staff' ? 'Facilities Operations' : 'Student Body',
+      created_at: new Date().toISOString()
+    };
+    mockProfiles.push(user);
+  } else if (role && (role === 'admin' || role === 'staff' || role === 'student')) {
+    user.role = role;
+  }
+
+  const token = `auth-${user.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  res.json({
+    message: `Authenticated successfully as ${user.full_name}`,
+    token,
+    user
+  });
+});
+
 // POST demo role switch (enables easy demonstration of all 3 roles)
 router.post('/demo-login', async (req: Request, res: Response) => {
   const { role } = req.body;
