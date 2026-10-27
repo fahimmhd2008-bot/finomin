@@ -351,3 +351,48 @@ VALUES
   ('Priority Campus Bike Share Pass (1 Month)', 'Unlimited access to the university electric bicycle sharing network.', 400, 'Campus Services', 20, 'BIKE'),
   ('Recycled Campus Notebook & Pen Set', 'Notebook made from 100% post-consumer recycled paper and bamboo pen.', 120, 'Stationery', 100, 'NOTE'),
   ('Fair Trade Espresso Bar Voucher (5 Cups)', 'Redeemable for 5 handcrafted espresso drinks at the Science Cafe.', 220, 'Cafeteria', 45, 'CAFE');
+
+-- ==============================================================================
+-- AUTO PROFILE CREATION TRIGGER
+-- Fires on every new auth.users INSERT (Google OAuth, email sign-up, magic link)
+-- and creates a matching row in public.profiles with a default 'student' role.
+-- Admins can then promote roles via the /admin/users page.
+-- ==============================================================================
+
+-- Function that creates the profile row
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, email, role, avatar_url, department)
+  VALUES (
+    NEW.id,
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name',
+      split_part(NEW.email, '@', 1)
+    ),
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'role', 'student'),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
+    COALESCE(NEW.raw_user_meta_data->>'department', 'Campus Community')
+  )
+  ON CONFLICT (id) DO NOTHING; -- Idempotent: skip if profile already exists
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger: fires AFTER every INSERT on auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
+
+-- RLS INSERT policy: allow the trigger function (SECURITY DEFINER) to write profiles
+DROP POLICY IF EXISTS "Service insert profiles" ON public.profiles;
+CREATE POLICY "Service insert profiles" ON public.profiles FOR INSERT
+  WITH CHECK (true);

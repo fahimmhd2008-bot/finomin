@@ -72,11 +72,36 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     }
 
     // Query profile for assigned role
-    const { data: profile } = await supabase
+    let { data: profile } = await supabase
       .from('profiles')
       .select('role, full_name')
       .eq('id', user.id)
       .single();
+
+    // If profile doesn't exist yet (e.g. first Google OAuth login, trigger may lag),
+    // upsert it now so subsequent requests work correctly.
+    if (!profile) {
+      const full_name =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split('@')[0] ||
+        'Campus User';
+
+      const { data: upserted } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email || '',
+          full_name,
+          role: user.user_metadata?.role || 'student',
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+          department: user.user_metadata?.department || 'Campus Community',
+        }, { onConflict: 'id' })
+        .select('role, full_name')
+        .single();
+
+      profile = upserted;
+    }
 
     req.user = {
       id: user.id,
