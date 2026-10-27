@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
-import { Leaf, Bell, Sparkles, User, CheckCircle2, AlertTriangle, ShieldCheck, ChevronDown } from 'lucide-react';
-import { getStoredUser, setStoredUser, api, setStoredToken } from '../lib/api';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Leaf,
+  Bell,
+  Sparkles,
+  User,
+  CheckCircle2,
+  AlertTriangle,
+  ShieldCheck,
+  ChevronDown,
+  LogIn,
+  LogOut,
+  ExternalLink
+} from 'lucide-react';
+import { getStoredUser, setStoredUser, api, setStoredToken, clearStoredToken } from '../lib/api';
+import { supabase } from '../lib/supabase';
 
 interface NavbarProps {
   onOpenAIPlan?: () => void;
@@ -9,9 +23,21 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenAIPlan, alerts = [], onResolveAlert }) => {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(getStoredUser());
   const [showAlertsDropdown, setShowAlertsDropdown] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      clearStoredToken();
+      if (supabase && supabase.auth) {
+        await supabase.auth.signOut().catch(() => {});
+      }
+    } finally {
+      navigate('/login?force=true');
+    }
+  };
 
   const handleRoleSwitch = async (role: 'admin' | 'staff' | 'student') => {
     try {
@@ -144,11 +170,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAIPlan, alerts = [], onRes
             )}
           </div>
 
+          {/* Direct Login Button on the Topside of the Web Page */}
+          <Link
+            to="/login?force=true"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:text-emerald-200 transition-all transform hover:scale-[1.02] shadow-sm"
+            title="Open Login & Authentication Page"
+          >
+            <LogIn className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Login</span>
+          </Link>
+
           {/* User Profile & Role Switcher */}
           <div className="relative">
             <button
               onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 text-xs text-slate-200 transition-colors"
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 text-xs text-slate-200 transition-colors cursor-pointer"
             >
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/40">
                 <User className="h-3.5 w-3.5" />
@@ -164,52 +200,93 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAIPlan, alerts = [], onRes
               <ChevronDown className="h-3 w-3 text-slate-400" />
             </button>
 
-            {/* Role switch dropdown for pairing/demo testing */}
+            {/* Profile & Login dropdown on the topside of the webpage */}
             {showRoleDropdown && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-800 bg-[#0c1427] shadow-2xl p-2 z-50">
-                <div className="px-2 py-1.5 border-b border-slate-800/80 mb-1">
-                  <div className="text-[11px] font-bold text-slate-300">Simulate Persona / Role</div>
-                  <div className="text-[10px] text-slate-500">Test permissions & RLS</div>
+              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-800 bg-[#0c1427] shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-2">
+                {/* User Header */}
+                <div className="px-2.5 py-2 border-b border-slate-800 mb-2">
+                  <p className="text-xs font-bold text-white">{currentUser.full_name}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{currentUser.email}</p>
+                  <span className={`inline-block mt-1 text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded ${
+                    currentUser.role === 'admin'
+                      ? 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+                      : currentUser.role === 'staff'
+                      ? 'bg-amber-950/80 text-amber-300 border border-amber-500/30'
+                      : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
+                  }`}>
+                    {currentUser.role} Role Active
+                  </span>
                 </div>
 
-                <button
-                  onClick={() => handleRoleSwitch('admin')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    currentUser.role === 'admin' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-300 hover:bg-slate-800/60'
-                  }`}
+                {/* Quick Link to Full Login Page */}
+                <Link
+                  to="/login?force=true"
+                  onClick={() => setShowRoleDropdown(false)}
+                  className="w-full mb-2 flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/40 transition-colors"
                 >
                   <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-rose-400" />
-                    Administrator
+                    <LogIn className="h-3.5 w-3.5 text-emerald-400" />
+                    Open Login Page
                   </span>
-                  {currentUser.role === 'admin' && <span className="text-[10px]">Active</span>}
-                </button>
+                  <ExternalLink className="h-3 w-3 text-emerald-400" />
+                </Link>
 
-                <button
-                  onClick={() => handleRoleSwitch('staff')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    currentUser.role === 'staff' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-300 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
-                    Facility Staff
-                  </span>
-                  {currentUser.role === 'staff' && <span className="text-[10px]">Active</span>}
-                </button>
+                {/* Persona Switch Options */}
+                <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Switch Persona / Role
+                </div>
 
-                <button
-                  onClick={() => handleRoleSwitch('student')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    currentUser.role === 'student' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-300 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-emerald-400" />
-                    Student
-                  </span>
-                  {currentUser.role === 'student' && <span className="text-[10px]">Active</span>}
-                </button>
+                <div className="space-y-1 mb-2">
+                  <button
+                    onClick={() => handleRoleSwitch('admin')}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      currentUser.role === 'admin' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-300 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5 text-rose-400" />
+                      Administrator
+                    </span>
+                    {currentUser.role === 'admin' && <span className="text-[10px] font-bold">Active</span>}
+                  </button>
+
+                  <button
+                    onClick={() => handleRoleSwitch('staff')}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      currentUser.role === 'staff' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-300 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
+                      Facility Staff
+                    </span>
+                    {currentUser.role === 'staff' && <span className="text-[10px] font-bold">Active</span>}
+                  </button>
+
+                  <button
+                    onClick={() => handleRoleSwitch('student')}
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      currentUser.role === 'student' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-300 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-emerald-400" />
+                      Student
+                    </span>
+                    {currentUser.role === 'student' && <span className="text-[10px] font-bold">Active</span>}
+                  </button>
+                </div>
+
+                {/* Sign Out Button */}
+                <div className="pt-2 border-t border-slate-800">
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>Sign Out & Go to Login</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

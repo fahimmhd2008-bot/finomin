@@ -1,16 +1,27 @@
 // client/src/lib/api.ts
 const BASE_URL = '/api/v1';
 
-export function getStoredToken(): string {
-  return localStorage.getItem('campuseco_token') || 'dev-admin-token';
+export function getStoredToken(): string | null {
+  const token = localStorage.getItem('campuseco_token');
+  if (token !== null) {
+    return token;
+  }
+  // Default to dev token on first fresh load if not explicitly logged out
+  if (localStorage.getItem('campuseco_logged_out') === 'true') {
+    return null;
+  }
+  return 'dev-admin-token';
 }
 
 export function setStoredToken(token: string): void {
   localStorage.setItem('campuseco_token', token);
+  localStorage.removeItem('campuseco_logged_out');
 }
 
 export function clearStoredToken(): void {
   localStorage.removeItem('campuseco_token');
+  localStorage.removeItem('campuseco_user');
+  localStorage.setItem('campuseco_logged_out', 'true');
 }
 
 export function getStoredUser() {
@@ -33,6 +44,7 @@ export function getStoredUser() {
 
 export function setStoredUser(user: any): void {
   localStorage.setItem('campuseco_user', JSON.stringify(user));
+  localStorage.removeItem('campuseco_logged_out');
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
