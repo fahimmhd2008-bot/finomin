@@ -11,7 +11,8 @@ import {
   ChevronDown,
   LogIn,
   LogOut,
-  ExternalLink
+  ExternalLink,
+  Video
 } from 'lucide-react';
 import { getStoredUser, setStoredUser, api, setStoredToken, clearStoredToken } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -79,6 +80,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAIPlan, alerts = [], onRes
 
         {/* Action Controls */}
         <div className="flex items-center gap-3">
+          {/* Explainer Video Link */}
+          <a
+            href="/walkthrough.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-900/50 hover:text-cyan-200 transition-all transform hover:scale-[1.02]"
+            title="Watch Animated Explainer Video with Voiceover & Architecture Breakdown"
+          >
+            <Video className="h-3.5 w-3.5 text-cyan-400" />
+            <span>Explainer Video</span>
+          </a>
+
           {/* Master AI Plan Button */}
           {currentUser.role !== 'student' && (
             <button

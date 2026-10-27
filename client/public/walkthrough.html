@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusEco Intelligence - Animated Video Walkthrough & Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070c18;
+      --card-bg: rgba(13, 21, 38, 0.75);
+      --border: rgba(30, 41, 59, 0.8);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --teal: #14b8a6;
+      --cyan: #06b6d4;
+      --rose: #f43f5e;
+      --amber: #f59e0b;
+      --indigo: #6366f1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Ambient glow elements */
+    .glow-sphere {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glow-1 { top: -100px; left: -100px; width: 500px; height: 500px; background: rgba(16, 185, 129, 0.12); }
+    .glow-2 { bottom: -100px; right: -100px; width: 500px; height: 500px; background: rgba(20, 184, 166, 0.12); }
+    .glow-3 { top: 40%; left: 45%; width: 400px; height: 400px; background: rgba(6, 182, 212, 0.08); }
+
+    /* Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #059669, #14b8a6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px var(--emerald-glow);
+    }
+
+    .brand h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #34d399, #2dd4bf, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand p {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #059669, #0d9488);
+      color: #ffffff;
+      box-shadow: 0 4px 15px var(--emerald-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #10b981, #14b8a6);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: var(--border);
+      color: #cbd5e1;
+    }
+    .btn-outline:hover {
+      background: rgba(30, 41, 59, 0.8);
+      color: #ffffff;
+      border-color: #475569;
+    }
+
+    .btn-record {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: #fda4af;
+    }
+    .btn-record:hover {
+      background: rgba(244, 63, 94, 0.25);
+      color: #ffffff;
+    }
+
+    /* Video Player Screen */
+    .video-viewport-wrapper {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border-radius: 20px;
+      border: 1px solid rgba(51, 65, 85, 0.6);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(16, 185, 129, 0.15);
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #videoCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #070c18;
+    }
+
+    /* Video Player Controls Bar */
+    .player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(10, 16, 30, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      z-index: 20;
+    }
+
+    .timeline-container {
+      flex: 1;
+      margin: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(51, 65, 85, 0.5);
+      border-radius: 999px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.1s linear;
+    }
+
+    .timeline-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #94a3b8;
+    }
+
+    .control-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(30, 41, 59, 0.5);
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover {
+      background: rgba(51, 65, 85, 0.8);
+      color: #ffffff;
+      border-color: #64748b;
+    }
+    .icon-btn.active {
+      background: #10b981;
+      color: #070c18;
+      border-color: #10b981;
+      box-shadow: 0 0 15px var(--emerald-glow);
+    }
+
+    /* Scene Index Grid */
+    .scenes-nav {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+
+    .scene-card {
+      padding: 10px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+    .scene-card:hover {
+      border-color: #475569;
+      transform: translateY(-2px);
+    }
+    .scene-card.active {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+    }
+
+    .scene-card .num {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #64748b;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .scene-card.active .num {
+      color: #34d399;
+    }
+
+    .scene-card .title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1.2;
+    }
+
+    /* Live Narration Transcript Box */
+    .narration-box {
+      margin-top: 20px;
+      padding: 16px 20px;
+      background: rgba(13, 21, 38, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .voice-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 1.5s infinite;
+      margin-top: 5px;
+      shrink-0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .narration-content h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #38bdf8;
+      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .narration-content p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    /* Recording Badge Overlay */
+    .rec-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(225, 29, 72, 0.9);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      z-index: 30;
+      box-shadow: 0 0 20px rgba(225, 29, 72, 0.6);
+    }
+    .rec-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      animation: blink 0.8s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+  <div class="glow-sphere glow-3"></div>
+
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:white;">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </div>
+        <div>
+          <h1>CampusEco Intelligence — Explainer Video</h1>
+          <p>Autonomous AI & IoT Environmental Sustainability Operations</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="toggleVoiceBtn" class="btn btn-outline" title="Turn voice narration on or off">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          <span id="voiceStatus">Voice: ON</span>
+        </button>
+
+        <button id="recordBtn" class="btn btn-record">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg>
+          <span id="recordLabel">Record & Save Video (.webm)</span>
+        </button>
+
+        <a href="/dashboard" class="btn btn-primary">
+          <span>Open Live App</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Video Canvas Viewport -->
+    <div class="video-viewport-wrapper">
+      <div id="recBadge" class="rec-badge">
+        <div class="rec-dot"></div>
+        <span>RECORDING VIDEO</span>
+      </div>
+
+      <canvas id="videoCanvas" width="1920" height="1080"></canvas>
+
+      <!-- Video Controls Bar -->
+      <div class="player-controls">
+        <div class="control-buttons">
+          <button id="prevBtn" class="icon-btn" title="Previous Scene">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+          </button>
+          
+          <button id="playPauseBtn" class="icon-btn active" title="Play / Pause">
+            <svg id="playIcon" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="pauseIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+
+          <button id="nextBtn" class="icon-btn" title="Next Scene">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          </button>
+        </div>
+
+        <div class="timeline-container">
+          <div id="progressBar" class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <div class="timeline-labels">
+            <span id="currentSceneLabel">Scene 1 of 8: Introduction & Vision</span>
+            <span id="timeLabel">00:00 / 01:20</span>
+          </div>
+        </div>
+
+        <div class="control-buttons">
+          <button id="restartBtn" class="icon-btn" title="Restart Video">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Spoken Voiceover Narration -->
+    <div class="narration-box">
+      <div class="voice-indicator"></div>
+      <div class="narration-content">
+        <h4 id="narrationTitle">SCENE 1: INTRODUCTION & OVERVIEW</h4>
+        <p id="narrationText">Loading narration script...</p>
+      </div>
+    </div>
+
+    <!-- Scenes Navigation Cards -->
+    <div class="scenes-nav" id="scenesNav"></div>
+  </div>
+
+  <script>
+    // Scenes Definition with Visual Elements & Narration
+    const SCENES = [
+      {
+        id: 0,
+        title: "Executive Vision",
+        duration: 9000,
+        badge: "01 // OVERVIEW",
+        headline: "CampusEco Intelligence Net",
+        subline: "AI-Powered Environmental & Sustainability IoT Operations",
+        narration: "Welcome to CampusEco Intelligence. This next-generation platform combines IoT sensory telemetry with Google Gemini 2.5 AI to autonomously monitor, predict, and optimize university sustainability operations across all campus facilities.",
+        bulletPoints: [
+          "Real-time IoT Telemetry across 7 Sustainability Domains",
+          "Autonomous Gemini 2.5 Pro & Flash AI Advisory Engine",
+          "Supabase Cloud Auth + Live PostgreSQL Synchronization"
+        ],
+        accentColor: "#10b981",
+        metric: { value: "34.2%", label: "Campus CO2 Reduction", delta: "+8.4% this quarter" }
+      },
+      {
+        id: 1,
+        title: "Dual Hybrid Auth",
+        duration: 10000,
+        badge: "02 // SECURITY & RBAC",
+        headline: "Enterprise Dual Hybrid Authentication",
+        subline: "Google OAuth + Institutional RBAC + 1-Click Simulation",
+        narration: "CampusEco implements a robust dual authentication system. Users can authenticate with institutional Google accounts through Supabase, use email credentials, or utilize 1-click persona simulation to preview Administrator, Facility Staff, or Student privileges.",
+        bulletPoints: [
+          "Dr. Evelyn Vance (Admin): Full IoT overrides, AI synthesis & RBAC",
+          "Carlos Mendez (Staff): Bins dispatch, food logs, water valves & energy",
+          "Alex Chen (Student): Rewards wallet, bottle deposits & air quality"
+        ],
+        accentColor: "#38bdf8",
+        metric: { value: "3 Roles", label: "RBAC Partitioning", delta: "Multi-tenant RLS" }
+      },
+      {
+        id: 2,
+        title: "Real-Time Command Center",
+        duration: 10000,
+        badge: "03 // IOT TELEMETRY",
+        headline: "Unified Environmental Operations Hub",
+        subline: "Live IoT Ingestion & Automated Telemetry Alerting",
+        narration: "The Command Center aggregates continuous telemetry streams. An automated background worker monitors sensor thresholds every 10 seconds, surfacing critical alerts with audio-visual notifications and instant resolution actions directly in the top header.",
+        bulletPoints: [
+          "Live composite campus sustainability rating and health score",
+          "Proactive telemetry anomaly detection with automatic alerts",
+          "Quick links and direct drill-downs into all 7 sub-systems"
+        ],
+        accentColor: "#14b8a6",
+        metric: { value: "98.4%", label: "Sensor Uptime", delta: "142 Active Nodes" }
+      },
+      {
+        id: 3,
+        title: "Smart Waste & Cafeteria",
+        duration: 11000,
+        badge: "04 // CIRCULAR ECONOMY",
+        headline: "Smart Dustbins & Food Waste AI",
+        subline: "Ultrasonic Fill Sensors & Prep Demand Forecasting",
+        narration: "Our smart dustbins use ultrasonic distance sensors to monitor fill levels and battery status, automatically generating dynamic collection routes. Simultaneously, the cafeteria module logs meal wastage and predicts optimal culinary prep to minimize surplus.",
+        bulletPoints: [
+          "Ultrasonic bin fill-level telemetry & battery life monitoring",
+          "Autonomous route planner prioritizing bins over 80% capacity",
+          "Gemini meal preparation forecast cutting cafeteria food loss by 28%"
+        ],
+        accentColor: "#f59e0b",
+        metric: { value: "1,240 kg", label: "Monthly Food Saved", delta: "-28.4% Surplus" }
+      },
+      {
+        id: 4,
+        title: "Water & Energy Grid",
+        duration: 11000,
+        badge: "05 // UTILITY OPTIMIZATION",
+        headline: "Acoustic Leak Detection & Grid Heatmap",
+        subline: "Flow Rate Monitoring, Smart Valves & Peak-Shaving",
+        narration: "For utilities, acoustic sensors detect pipe pressure anomalies to instantly locate leaks and trigger automated valve isolation. The energy dashboard maps building consumption in real time and optimizes HVAC setpoints during peak grid demand.",
+        bulletPoints: [
+          "Acoustic water leak detection with motorized shutoff valves",
+          "Rainwater harvesting cistern storage and filtration tracking",
+          "Campus energy heatmaps with automated peak-shaving recommendations"
+        ],
+        accentColor: "#06b6d4",
+        metric: { value: "420 kL", label: "Water Conserved", delta: "+15% Rainwater Reuse" }
+      },
+      {
+        id: 5,
+        title: "Autonomous AI Advisory",
+        duration: 12000,
+        badge: "06 // GEMINI 2.5 BRAIN",
+        headline: "Campus AI Advisory & Decision Synthesis",
+        subline: "Cross-Domain Telemetry Analysis Powered by Gemini",
+        narration: "At the core is the CampusEco Brain. It cross-analyzes weather forecasts, sensor data, and facility schedules using Google Gemini 2.5, delivering actionable executive plans with concrete ROI, carbon offsets, and automated dispatch workflows.",
+        bulletPoints: [
+          "Autonomous multi-stream synthesis combining all 7 IoT domains",
+          "Automated fallback algorithm ensuring 100% advisory availability",
+          "One-click action execution with measurable carbon and financial impact"
+        ],
+        accentColor: "#a855f7",
+        metric: { value: "4.8 hrs", label: "ROI Payback", delta: "100% Autonomous" }
+      },
+      {
+        id: 6,
+        title: "Student Rewards Hub",
+        duration: 10000,
+        badge: "07 // GAMIFICATION",
+        headline: "Plastic Bottle Reverse Vending & Rewards",
+        subline: "Encouraging Circular Campus Recycling with Points",
+        narration: "To engage the student community, the Plastic Rewards Hub simulates reverse vending machines. Students deposit recyclable plastics to earn green eco-points, check leaderboards, and redeem vouchers for cafeteria espresso and bookstore gear.",
+        bulletPoints: [
+          "Interactive plastic bottle deposit terminal simulation",
+          "Dynamic student points wallet and real-time transaction ledger",
+          "Digital voucher redemption system integrated with campus stores"
+        ],
+        accentColor: "#10b981",
+        metric: { value: "18,450", label: "Bottles Recycled", delta: "+3,200 this week" }
+      },
+      {
+        id: 7,
+        title: "Architectural Summary",
+        duration: 11000,
+        badge: "08 // TECH STACK & SUMMARY",
+        headline: "Production Ready Architecture",
+        subline: "React 19 + TypeScript + Node.js + Supabase + Gemini",
+        narration: "Built with modern React, Tailwind CSS, TypeScript, Express, and Supabase PostgreSQL with Google Gemini 2.5, CampusEco provides a scalable, enterprise-ready blueprint for next-generation smart campus environmental operations.",
+        bulletPoints: [
+          "Complete TypeScript type safety from sensor to database",
+          "Production optimized frontend bundle with zero build errors",
+          "Unified single URL access with top-aligned navigation and controls"
+        ],
+        accentColor: "#34d399",
+        metric: { value: "100%", label: "Production Health", delta: "Ready to Deploy" }
+      }
+    ];
+
+    // Canvas & State Management
+    const canvas = document.getElementById('videoCanvas');
+    const ctx = canvas.getContext('2d');
+    let currentSceneIndex = 0;
+    let isPlaying = true;
+    let sceneStartTime = performance.now();
+    let isVoiceEnabled = true;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+
+    // Elements
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const progressFill = document.getElementById('progressFill');
+    const currentSceneLabel = document.getElementById('currentSceneLabel');
+    const timeLabel = document.getElementById('timeLabel');
+    const narrationTitle = document.getElementById('narrationTitle');
+    const narrationText = document.getElementById('narrationText');
+    const scenesNav = document.getElementById('scenesNav');
+    const toggleVoiceBtn = document.getElementById('toggleVoiceBtn');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const recordBtn = document.getElementById('recordBtn');
+    const recordLabel = document.getElementById('recordLabel');
+    const recBadge = document.getElementById('recBadge');
+
+    // Build scene navigation cards
+    SCENES.forEach((scene, i) => {
+      const card = document.createElement('div');
+      card.className = `scene-card ${i === 0 ? 'active' : ''}`;
+      card.id = `nav-scene-${i}`;
+      card.innerHTML = `
+        <div class="num">0${i + 1}</div>
+        <div class="title">${scene.title}</div>
+      `;
+      card.onclick = () => jumpToScene(i);
+      scenesNav.appendChild(card);
+    });
+
+    // Voice Narration with Web Speech API
+    function speakNarration(text) {
+      if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel(); // cancel previous
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      
+      // Try to choose an English natural sounding voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Enhanced') || v.name.includes('Online')));
+      if (preferred) utterance.voice = preferred;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function updateSceneNarration(index) {
+      const scene = SCENES[index];
+      narrationTitle.textContent = `${scene.badge} — ${scene.title.toUpperCase()}`;
+      narrationText.textContent = scene.narration;
+      speakNarration(scene.narration);
+
+      // Update Nav Cards
+      document.querySelectorAll('.scene-card').forEach((c, idx) => {
+        c.classList.toggle('active', idx === index);
+      });
+      currentSceneLabel.textContent = `Scene ${index + 1} of ${SCENES.length}: ${scene.title}`;
+    }
+
+    function jumpToScene(index) {
+      currentSceneIndex = index;
+      sceneStartTime = performance.now();
+      updateSceneNarration(index);
+    }
+
+    // Canvas Drawing Function
+    function renderFrame(now) {
+      const scene = SCENES[currentSceneIndex];
+      const elapsed = now - sceneStartTime;
+      const progress = Math.min(elapsed / scene.duration, 1);
+
+      // Update Progress UI
+      const totalDuration = SCENES.reduce((acc, s) => acc + s.duration, 0);
+      const pastDuration = SCENES.slice(0, currentSceneIndex).reduce((acc, s) => acc + s.duration, 0);
+      const overallProgress = (pastDuration + elapsed) / totalDuration;
+      progressFill.style.width = `${Math.min(overallProgress * 100, 100)}%`;
+
+      const currSec = Math.floor((pastDuration + elapsed) / 1000);
+      const totSec = Math.floor(totalDuration / 1000);
+      const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+      timeLabel.textContent = `${formatTime(currSec)} / ${formatTime(totSec)}`;
+
+      // Draw Canvas Frame (1920 x 1080)
+      ctx.fillStyle = '#070c18';
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      // Background geometric grid
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.3)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < 1920; x += 80) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 1080);
+        ctx.stroke();
+      }
+      for (let y = 0; y < 1080; y += 80) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1920, y);
+        ctx.stroke();
+      }
+
+      // Decorative ambient glow on canvas
+      const grad = ctx.createRadialGradient(960, 540, 50, 960, 540, 800);
+      grad.addColorStop(0, `${scene.accentColor}18`);
+      grad.addColorStop(1, '#070c1800');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1920, 1080);
+
+      // Top Header Bar
+      ctx.fillStyle = '#0d1526';
+      ctx.fillRect(100, 80, 1720, 70);
+      ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+      ctx.strokeRect(100, 80, 1720, 70);
+
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(140, 115, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px "Plus Jakarta Sans"';
+      ctx.fillText('CampusEco Intelligence Operations', 170, 122);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '600 18px "JetBrains Mono"';
+      ctx.fillText('AUTONOMOUS SYSTEM EXPLAINER', 1400, 122);
+
+      // Scene Badge & Title
+      ctx.fillStyle = scene.accentColor;
+      ctx.font = 'bold 22px "JetBrains Mono"';
+      ctx.fillText(scene.badge, 120, 240);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 64px "Plus Jakarta Sans"';
+      ctx.fillText(scene.headline, 120, 320);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 28px "Plus Jakarta Sans"';
+      ctx.fillText(scene.subline, 120, 375);
+
+      // Left Column: Key Pillars
+      const startY = 460;
+      scene.bulletPoints.forEach((point, i) => {
+        const itemY = startY + (i * 90);
+        // Card background
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(120, itemY, 1020, 70);
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+        ctx.strokeRect(120, itemY, 1020, 70);
+
+        // Indicator dot
+        ctx.fillStyle = scene.accentColor;
+        ctx.beginPath();
+        ctx.arc(160, itemY + 35, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#f1f5f9';
+        ctx.font = '600 24px "Plus Jakarta Sans"';
+        ctx.fillText(point, 190, itemY + 43);
+      });
+
+      // Right Column: Metric Showcase Box
+      const boxX = 1200;
+      const boxY = 460;
+      ctx.fillStyle = 'rgba(13, 21, 38, 0.9)';
+      ctx.fillRect(boxX, boxY, 600, 340);
+      ctx.strokeStyle = scene.accentColor;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(boxX, boxY, 600, 340);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '700 20px "JetBrains Mono"';
+      ctx.fillText(scene.metric.label.toUpperCase(), boxX + 50, boxY + 70);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 84px "Plus Jakarta Sans"';
+      ctx.fillText(scene.metric.value, boxX + 50, boxY + 175);
+
+      ctx.fillStyle = scene.accentColor;
+      ctx.font = 'bold 24px "Plus Jakarta Sans"';
+      ctx.fillText(`✓ ${scene.metric.delta}`, boxX + 50, boxY + 235);
+
+      // Animated Waveform / Stream Pulse at bottom
+      ctx.strokeStyle = scene.accentColor;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let i = 0; i < 600; i += 20) {
+        const waveY = boxY + 290 + Math.sin((now / 200) + (i / 40)) * 12;
+        if (i === 0) ctx.moveTo(boxX + 50, waveY);
+        else ctx.lineTo(boxX + 50 + i * 0.85, waveY);
+      }
+      ctx.stroke();
+
+      // Footer Telemetry Bar
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.fillRect(100, 950, 1720, 50);
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.8)';
+      ctx.strokeRect(100, 950, 1720, 50);
+
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.fillText('LIVE STREAM: IoT Sensory Ingestion 100% Operational', 130, 982);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px "JetBrains Mono"';
+      ctx.fillText(`Scene ${currentSceneIndex + 1} / 8 • Time: ${(elapsed / 1000).toFixed(1)}s`, 1460, 982);
+
+      // Next Scene Transition
+      if (isPlaying) {
+        if (elapsed >= scene.duration) {
+          if (currentSceneIndex < SCENES.length - 1) {
+            currentSceneIndex++;
+            sceneStartTime = performance.now();
+            updateSceneNarration(currentSceneIndex);
+          } else {
+            // Finished
+            isPlaying = false;
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            if (isRecording) stopRecording();
+          }
+        }
+      }
+
+      requestAnimationFrame(renderFrame);
+    }
+
+    // Control Handlers
+    playPauseBtn.onclick = () => {
+      isPlaying = !isPlaying;
+      playIcon.style.display = isPlaying ? 'none' : 'block';
+      pauseIcon.style.display = isPlaying ? 'block' : 'none';
+      if (!isPlaying && 'speechSynthesis' in window) {
+        window.speechSynthesis.pause();
+      } else if (isPlaying && 'speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+      }
+    };
+
+    prevBtn.onclick = () => {
+      if (currentSceneIndex > 0) {
+        jumpToScene(currentSceneIndex - 1);
+      }
+    };
+
+    nextBtn.onclick = () => {
+      if (currentSceneIndex < SCENES.length - 1) {
+        jumpToScene(currentSceneIndex + 1);
+      }
+    };
+
+    restartBtn.onclick = () => {
+      jumpToScene(0);
+      isPlaying = true;
+      playIcon.style.display = 'none';
+      pauseIcon.style.display = 'block';
+    };
+
+    // Toggle Voice Narration
+    toggleVoiceBtn.onclick = () => {
+      isVoiceEnabled = !isVoiceEnabled;
+      voiceStatus.textContent = isVoiceEnabled ? "Voice: ON" : "Voice: OFF";
+      toggleVoiceBtn.classList.toggle('btn-outline', !isVoiceEnabled);
+      toggleVoiceBtn.classList.toggle('btn-primary', isVoiceEnabled);
+      if (!isVoiceEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      } else if (isVoiceEnabled) {
+        speakNarration(SCENES[currentSceneIndex].narration);
+      }
+    };
+
+    // Video Recording Feature using MediaRecorder & Canvas Stream
+    recordBtn.onclick = () => {
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    };
+
+    function startRecording() {
+      try {
+        const stream = canvas.captureStream(30); // 30 FPS
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream, {
+          mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+            ? 'video/webm;codecs=vp9'
+            : 'video/webm',
+          videoBitsPerSecond: 5000000 // 5 Mbps quality
+        });
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'CampusEco_Intelligence_Walkthrough.webm';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        recBadge.style.display = 'flex';
+        recordBtn.style.background = '#e11d48';
+        recordLabel.textContent = 'Recording... Click to Stop & Download';
+        
+        // Restart from scene 1 for a clean recording
+        jumpToScene(0);
+        isPlaying = true;
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+      } catch (err) {
+        alert('Could not start screen recorder: ' + err.message);
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      isRecording = false;
+      recBadge.style.display = 'none';
+      recordBtn.style.background = '';
+      recordLabel.textContent = 'Record & Save Video (.webm)';
+    }
+
+    // Initialize
+    updateSceneNarration(0);
+    requestAnimationFrame(renderFrame);
+  </script>
+</body>
+</html>
