@@ -22,7 +22,7 @@ if (!apiKey || apiKey === 'your-production-gemini-api-key') {
 
 // Initialized instance with actual key or dummy key for safe instantiation
 export const ai = new GoogleGenAI({ apiKey: apiKey || 'MISSING_KEY' });
-export const GEMINI_FLASH_MODEL = 'gemini-2.5-flash';
-export const GEMINI_PRO_MODEL = 'gemini-2.5-pro';
+export const GEMINI_FLASH_MODEL = process.env.GEMINI_FLASH_MODEL || 'gemini-3.8-flash';
+export const GEMINI_PRO_MODEL = process.env.GEMINI_PRO_MODEL || 'gemini-3.8-pro';
 
 export const isGeminiConfigured = Boolean(apiKey && apiKey !== 'your-production-gemini-api-key' && apiKey.length > 5);

@@ -97,6 +97,28 @@ export interface MasterAdvisoryOutput {
   generated_at: string;
 }
 
+function parseGeminiJsonResponse<T>(rawText: string): T {
+  let cleaned = rawText.trim();
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+  return JSON.parse(cleaned) as T;
+}
+
+async function callGeminiWithTimeout<T>(generator: () => Promise<T>, timeoutMs = 4000): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Gemini API call timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+  try {
+    return await Promise.race([generator(), timeoutPromise]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 /**
  * Predicts optimal food prep quantities and batch schedule
  */
@@ -113,7 +135,7 @@ Calculate recommended meal prep weight (kg), target waste reduction percentage, 
 
   if (isGeminiConfigured) {
     try {
-      const response = await ai.models.generateContent({
+      const response = await callGeminiWithTimeout(() => ai.models.generateContent({
         model: GEMINI_FLASH_MODEL,
         contents: prompt,
         config: {
@@ -121,11 +143,10 @@ Calculate recommended meal prep weight (kg), target waste reduction percentage, 
           responseMimeType: 'application/json',
           temperature: 0.2,
         },
-      });
+      }), 4000);
 
       if (response && response.text) {
-        const parsed = JSON.parse(response.text.trim()) as FoodPrepPredictionOutput;
-        return parsed;
+        return parseGeminiJsonResponse<FoodPrepPredictionOutput>(response.text);
       }
     } catch (err: any) {
       console.warn('[AI Service] Gemini Food Waste prediction error, using mathematical heuristic:', err.message);
@@ -186,7 +207,7 @@ Determine leak probability percentage, severity level ('none'|'minor'|'major'|'c
 
   if (isGeminiConfigured) {
     try {
-      const response = await ai.models.generateContent({
+      const response = await callGeminiWithTimeout(() => ai.models.generateContent({
         model: GEMINI_FLASH_MODEL,
         contents: prompt,
         config: {
@@ -194,10 +215,10 @@ Determine leak probability percentage, severity level ('none'|'minor'|'major'|'c
           responseMimeType: 'application/json',
           temperature: 0.1,
         },
-      });
+      }), 4000);
 
       if (response && response.text) {
-        return JSON.parse(response.text.trim()) as WaterLeakAnalysisOutput;
+        return parseGeminiJsonResponse<WaterLeakAnalysisOutput>(response.text);
       }
     } catch (err: any) {
       console.warn('[AI Service] Gemini Water Analysis error, falling back to hydraulic formula:', err.message);
@@ -258,7 +279,7 @@ Calculate curtailment potential in kW, optimal HVAC thermostat setpoint, concret
 
   if (isGeminiConfigured) {
     try {
-      const response = await ai.models.generateContent({
+      const response = await callGeminiWithTimeout(() => ai.models.generateContent({
         model: GEMINI_PRO_MODEL,
         contents: prompt,
         config: {
@@ -266,10 +287,10 @@ Calculate curtailment potential in kW, optimal HVAC thermostat setpoint, concret
           responseMimeType: 'application/json',
           temperature: 0.2,
         },
-      });
+      }), 4000);
 
       if (response && response.text) {
-        return JSON.parse(response.text.trim()) as EnergyOptimizationOutput;
+        return parseGeminiJsonResponse<EnergyOptimizationOutput>(response.text);
       }
     } catch (err: any) {
       console.warn('[AI Service] Gemini Energy Optimization error, falling back to thermodynamic model:', err.message);
@@ -329,7 +350,7 @@ Provide an overall campus sustainability health score (0-100), executive summary
 
   if (isGeminiConfigured) {
     try {
-      const response = await ai.models.generateContent({
+      const response = await callGeminiWithTimeout(() => ai.models.generateContent({
         model: GEMINI_PRO_MODEL,
         contents: prompt,
         config: {
@@ -337,10 +358,10 @@ Provide an overall campus sustainability health score (0-100), executive summary
           responseMimeType: 'application/json',
           temperature: 0.2,
         },
-      });
+      }), 4000);
 
       if (response && response.text) {
-        return JSON.parse(response.text.trim()) as MasterAdvisoryOutput;
+        return parseGeminiJsonResponse<MasterAdvisoryOutput>(response.text);
       }
     } catch (err: any) {
       console.warn('[AI Service] Gemini Master Advisory error, falling back to composite index engine:', err.message);

@@ -25,6 +25,11 @@ const queryClient = new QueryClient({
   },
 });
 
+export const AIModalContext = React.createContext<{ openAIPlan: () => void }>({
+  openAIPlan: () => {},
+});
+export const useAIModal = () => React.useContext(AIModalContext);
+
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAIPlanOpen, setIsAIPlanOpen] = useState(false);
 
@@ -41,27 +46,29 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080e1a] text-slate-100">
-      <Navbar
-        onOpenAIPlan={() => setIsAIPlanOpen(true)}
-        alerts={data?.alerts || []}
-        onResolveAlert={(id) => resolveAlertMutation.mutate(id)}
-      />
+    <AIModalContext.Provider value={{ openAIPlan: () => setIsAIPlanOpen(true) }}>
+      <div className="min-h-screen flex flex-col bg-[#080e1a] text-slate-100">
+        <Navbar
+          onOpenAIPlan={() => setIsAIPlanOpen(true)}
+          alerts={data?.alerts || []}
+          onResolveAlert={(id) => resolveAlertMutation.mutate(id)}
+        />
 
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar onOpenAIPlan={() => setIsAIPlanOpen(true)} />
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
-        </main>
+        <div className="flex-1 flex overflow-hidden">
+          <Sidebar onOpenAIPlan={() => setIsAIPlanOpen(true)} />
+          <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto">
+              {children}
+            </div>
+          </main>
+        </div>
+
+        <AIAdvisoryModal
+          isOpen={isAIPlanOpen}
+          onClose={() => setIsAIPlanOpen(false)}
+        />
       </div>
-
-      <AIAdvisoryModal
-        isOpen={isAIPlanOpen}
-        onClose={() => setIsAIPlanOpen(false)}
-      />
-    </div>
+    </AIModalContext.Provider>
   );
 };
 
@@ -90,7 +97,7 @@ export const App: React.FC = () => {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage onOpenAIPlan={() => {}} />
+                <DashboardPage />
               </ProtectedRoute>
             }
           />

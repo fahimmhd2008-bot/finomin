@@ -18,12 +18,15 @@ import {
 import { Link } from 'react-router-dom';
 import { MetricCard } from '../components/MetricCard';
 import { api, getStoredUser } from '../lib/api';
+import { useAIModal } from '../App';
 
 interface DashboardPageProps {
-  onOpenAIPlan: () => void;
+  onOpenAIPlan?: () => void;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenAIPlan }) => {
+  const { openAIPlan } = useAIModal();
+  const handleOpenAI = onOpenAIPlan || openAIPlan;
   const queryClient = useQueryClient();
   const currentUser = getStoredUser();
 
@@ -179,7 +182,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onOpenAIPlan }) =>
 
         {/* 8. AI Quick Master Plan Card */}
         <div
-          onClick={onOpenAIPlan}
+          onClick={handleOpenAI}
           className="glass-panel rounded-2xl p-5 border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-teal-950/20 to-slate-900 cursor-pointer transform hover:-translate-y-1 transition-all shadow-glow-emerald flex flex-col justify-between"
         >
           <div>
