@@ -51,7 +51,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // System Health & Diagnostics
-app.get('/health', (req: Request, res: Response) => {
+const healthHandler = (req: Request, res: Response) => {
   res.json({
     status: 'online',
     system: 'AI Campus Environmental & Sustainability Intelligence System',
@@ -62,7 +62,9 @@ app.get('/health', (req: Request, res: Response) => {
     },
     version: '1.0.0',
   });
-});
+};
+app.get('/health', healthHandler);
+app.get('/api/v1/health', healthHandler);
 
 // Mount /api/v1 routes
 app.use('/api/v1/auth', authRoutes);
